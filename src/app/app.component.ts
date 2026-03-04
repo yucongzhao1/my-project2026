@@ -23,24 +23,24 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     let configLoad = false;
-    this.router.events.subscribe(ev => {
-      if (ev instanceof RouteConfigLoadStart) {
-        configLoad = true;
-      }
-      if (configLoad && ev instanceof NavigationError) {
-        this.modalSrv.confirm({
-          nzTitle: `提醒`,
-          nzContent: environment.production ? `应用可能已发布新版本，请点击刷新才能生效。` : `无法加载路由：${ev.url}`,
-          nzCancelDisabled: false,
-          nzOkText: '刷新',
-          nzCancelText: '忽略',
-          nzOnOk: () => location.reload()
-        });
-      }
-      if (ev instanceof NavigationEnd) {
-        this.titleSrv.setTitle();
-        this.modalSrv.closeAll();
-      }
-    });
+    // this.router.events.subscribe(ev => {
+    //   if (ev instanceof RouteConfigLoadStart) {
+    //     configLoad = true;
+    //   }
+    //   if (configLoad && ev instanceof NavigationError) {
+    //     this.modalSrv.confirm({
+    //       nzTitle: `提醒`,
+    //       nzContent: environment.production ? `应用可能已发布新版本，请点击刷新才能生效。` : `无法加载路由：${ev.url}`,
+    //       nzCancelDisabled: false,
+    //       nzOkText: '刷新',
+    //       nzCancelText: '忽略',
+    //       nzOnOk: () => location.reload()
+    //     });
+    //   }
+    //   if (ev instanceof NavigationEnd) {
+    //     this.titleSrv.setTitle();
+    //     this.modalSrv.closeAll();
+    //   }
+    // });
   }
 }
