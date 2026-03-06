@@ -1,4 +1,5 @@
 {
+  // 告诉 TypeScript 编译器（tsc）如何编译你
   "compileOnSave": false,
   "compilerOptions": {
     "baseUrl": "./",
@@ -9,8 +10,8 @@
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "sourceMap": true,
-    "declaration": false,
+    "sourceMap": true, // 是否生成 .js.map 文件
+    "declaration": false, // 是否生成 .d.ts 类型声明文件
     "downlevelIteration": true,
     "experimentalDecorators": true,
     "moduleResolution": "node",
@@ -18,17 +19,21 @@
     "target": "ES2022",
     "module": "ES2022",
     "useDefineForClassFields": false,
-    "lib": [
+    "lib": [ // 编译时包含的库文件   支持 ES2022 语法 + 浏览器 DOM API（如 document、window）
       "ES2022",
       "dom"
     ],
-    "allowSyntheticDefaultImports": true,
+    // 允许导入无默认导出的模块为默认导入
+    "allowSyntheticDefaultImports": true,  //兼容第三方库（如 import React from 'react'，即使 React 无默认导出也不报错
     "paths": {
       "@shared": [
         "src/app/shared/index"
       ],
       "@core": [
-        "src/app/core/index"
+        "src/app/core/index" // 匹配 core 根目录的 index.ts（用于导出 CoreModule）
+      ],
+      "@core/*":[
+        "src/app/core/*" // 匹配 core 下所有子目录/文件（如 @core/net/DefaultInterceptor）
       ],
       "@env/*": [
         "src/environments/*"
@@ -36,6 +41,7 @@
     }
   },
   "angularCompilerOptions": {
+    // 配置 Angular 专属的编译规则
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,

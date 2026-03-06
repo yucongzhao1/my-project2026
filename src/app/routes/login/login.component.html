@@ -1,1 +1,24 @@
-<p>login works!</p>
+<div class="login-container">
+  <h2>登录</h2>
+  <form (ngSubmit)="onLogin()">
+    <!-- 手机号输入 -->
+    <div class="form-group">
+      <label for="phone">手机号:</label>
+      <input type="tel" id="phone" name="phone" [(ngModel)]="phoneNumber" placeholder="请输入手机号" required />
+    </div>
+
+    <!-- 验证码输入 -->
+    <div class="form-group">
+      <label for="captcha">验证码:</label>
+      <input type="text" id="captcha" name="captcha" [(ngModel)]="captcha" placeholder="请输入验证码" required />
+    </div>
+
+    <!-- 获取验证码按钮 -->
+    <button type="button" (click)="sendCaptcha()" [disabled]="isCountdownActive">
+      {{ isCountdownActive ? countdown + '秒后重新发送' : '获取验证码' }}
+    </button>
+
+    <!-- 登录按钮 -->
+    <button type="submit">登录</button>
+  </form>
+</div>

@@ -12,3 +12,42 @@
     "src/**/*.d.ts"
   ]
 }
+/**
+ * 一. tsconfig.json 的加载时机
+  1.由开发 / 构建工具在启动时读取
+  1. 开发阶段（ng serve）
+    当你执行 ng serve 启动开发服务器时：
+    第一步：Angular CLI 会先读取项目根目录的 tsconfig.json（主配置），若存在 tsconfig.app.json（src 目录下），则优先以它为「应用级配置」（继承 tsconfig.json）；
+    第二步：CLI 会将配置传递给 TypeScript 编译器（tsc）和 Angular 专用编译器（ngc），完成配置加载；
+    第三步：基于配置启动增量编译（监听文件变化），此时所有编译规则、路径别名等已生效。
+  2. 构建阶段（ng build）
+    执行 ng build（生产 / 开发构建）时：
+    加载时机和规则与 ng serve 一致，但会根据 --configuration production 等参数，结合 angular.json 中的配置（如 fileReplacements），合并 tsconfig.prod.json（若有）的覆盖配置；
+    核心：构建前会完整解析 tsconfig.json，确保编译输出符合配置规则（如 target: ES2022、strict: true）。
+  3. IDE 开发阶段（如 VS Code）
+    VS Code 的 TypeScript 语言服务（TS Server）会实时监控 tsconfig.json 变化，打开项目时自动读取配置，用于代码提示、类型检查、路径别名跳转（如 @core 能跳转至对应目录）；
+    这也是你写代码时，路径别名不报错、严格类型检查实时提示的原因。
+
+ * 二. 配置的生效流程（如何起作用）
+ graph TD
+    A[启动 ng serve/ng build 或打开 IDE] --> B[读取 tsconfig.json 主配置]
+    B --> C{是否有子配置？如 tsconfig.app.json/tsconfig.prod.json}
+    C -->|是| D[子配置继承主配置，覆盖冲突项]
+    C -->|否| E[直接使用主配置]
+    D & E --> F[解析 compilerOptions（TS 核心配置）]
+    D & E --> G[解析 angularCompilerOptions（Angular 专属配置）]
+    F --> H[TS 编译器生效：类型检查、语法编译、路径别名解析]
+    G --> I[Angular 编译器生效：模板检查、依赖注入检查、装饰器处理]
+    H & I --> J[配置完全生效，开始编译/开发]
+
+  总结加载时机：
+    开发 / 构建时：ng serve/ng build 启动瞬间读取 tsconfig.json；
+    编码时：IDE 的 TS 语言服务实时读取配置，用于代码提示和检查。
+    生效逻辑：
+    compilerOptions 由 TS 编译器解析，控制类型检查、路径别名、语法编译；
+    angularCompilerOptions 由 Angular 编译器解析，控制模板、依赖注入等 Angular 专属规则；
+    子配置（如 tsconfig.app.json）继承并覆盖主配置。
+    生效方式：
+    核心配置变更（paths、strict）需重启 ng serve/TS Server；
+    构建时自动读取最新配置。
+ */
