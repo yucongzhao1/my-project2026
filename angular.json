@@ -101,11 +101,11 @@
             },
             "development": {
               "buildOptimizer": false,
-              "optimization": false,
+              "optimization": false, // 开启代码压缩（JS/CSS/HTML）
               "vendorChunk": true,
               "extractLicenses": false,
-              "sourceMap": true,
-              "namedChunks": true
+              "sourceMap": true, // 关闭sourceMap（减少体积、保护源码）
+              "namedChunks": true // 关闭命名chunk（减少体积）
             }
           },
           "defaultConfiguration": "production"

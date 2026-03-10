@@ -1,90 +1,80 @@
-<p align="center">
-  <a href="https://ng-alain.com">
-    <img width="100" src="https://ng-alain.com/assets/img/logo-color.svg">
-  </a>
-</p>
+## --configuration production作用：
+ * 1. 指定本次构建使用的「预定义配置集」angular 会根据你指定的配置名（如 production/beta），加载 angular.json 中对应的构建规则，实现「一套代码、多环境 / 多配置构建」（比如生产环境压缩代码、测试环境保留日志、beta 环境指向测试接口） 
 
-<h1 align="center">NG-ALAIN</h1>
+ -configuration 可简写为 -c，
 
-<div align="center">
-  Out-of-box UI solution for enterprise applications, Let developers focus on business.
+## "build": "node --max_old_space_size=8048 ./node_modules/@angular/cli/bin/ng build --configuration=production && node obfuscate.js",
+./node_modules/@angular/cli/bin/ng  直接调用本地安装的 Angular CLI（避免全局 CLI 版本不一致
+- npm install javascript-obfuscator --save-dev 在项目跟目录中安装obfuscator
 
-  [![Build Status](https://dev.azure.com/ng-alain/ng-alain/_apis/build/status/ng-alain-CI?branchName=master)](https://dev.azure.com/ng-alain/ng-alain/_build/latest?definitionId=2&branchName=master)
-  [![Dependency Status](https://david-dm.org/ng-alain/ng-alain/status.svg?style=flat-square)](https://david-dm.org/ng-alain/ng-alain)
-  [![GitHub Release Date](https://img.shields.io/github/release-date/ng-alain/ng-alain.svg?style=flat-square)](https://github.com/ng-alain/ng-alain/releases)
-  [![NPM version](https://img.shields.io/npm/v/ng-alain.svg?style=flat-square)](https://www.npmjs.com/package/ng-alain)
-  [![prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://prettier.io/)
-  [![GitHub license](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat-square)](https://github.com/ng-alain/ng-alain/blob/master/LICENSE)
-  [![Gitter](https://img.shields.io/gitter/room/ng-alain/ng-alain.svg?style=flat-square)](https://gitter.im/ng-alain/ng-alain)
-  [![ng-zorro-vscode](https://img.shields.io/badge/ng--zorro-VSCODE-brightgreen.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=cipchk.ng-zorro-vscode)
-  [![ng-alain-vscode](https://img.shields.io/badge/ng--alain-VSCODE-brightgreen.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=cipchk.ng-alain-vscode)
+```js
 
-</div>
+"build": "node --max_old_space_size=8048 ./node_modules/@angular/cli/bin/ng build --configuration=production && node obfuscate.js", 简化为如下
 
-English | [简体中文](README-zh_CN.md)
+"scripts": {
+  "ng": "node --max_old_space_size=8048 ./node_modules/@angular/cli/bin/ng",
+  "build": "npm run ng build -- --configuration=production && node obfuscate.js"
+}
 
-## Quickstart
+```
 
-- [Getting Started](https://ng-alain.com/docs/getting-started)
+## ng serve -o --hmr
+启动 Angular 开发服务器：
+- s：serve 的简写，启动热重载的开发服务器；
+- -o：启动后自动打开浏览器；
+启动热模块替换（HMR） 的开发服务器：
+- --hmr：热重载升级，修改代码后无需刷新页面，直接替换模块（保留页面状态）；
 
-## Links
+## "lint-staged": {
+    "(src)/**/*.{html,ts}": [
+      "eslint --fix"
+    ],
+    "(src)/**/*.less": [
+      "npm run lint:style"
+    ]
+    }
+工作原理
+    A[开发者执行 git add 文件名] --> B[文件进入 Git 暂存区]
+    B --> C[执行 git commit]
+    C --> D[Husky 触发 pre-commit 钩子]
+    D --> E[lint-staged 读取配置规则]
+    E --> F1[匹配暂存区的 ts/html 文件 → 执行 eslint --fix]
+    E --> F2[匹配暂存区的 less 文件 → 执行 npm run lint:style]
+    F1 & F2 --> G{校验是否通过？}
+    G -->|通过| H[完成 commit]
+    G -->|失败| I[终止 commit，提示错误]
+- 全量 lint（npm run lint）检查所有文件，大型项目耗时久
 
-+ [Document](https://ng-alain.com) ([Surge Mirror](https://ng-alain-doc.surge.sh))
-+ [@delon Source](https://github.com/ng-alain/delon)
-+ [DEMO](https://ng-alain.surge.sh) ([国内镜像](https://ng-alain.gitee.io/))
+- 和 lint:ts 的关系：
+lint:ts 是 ng lint --fix（Angular CLI 封装的 ESLint 检查），作用于所有 ts 文件；
+lint-staged 中的 eslint --fix 仅作用于暂存区的 ts/html 文件，核心规则一致，只是范围更小。
 
-## Features
+## git 钩子函数
+钩子名称	触发时机	核心用途	实战场景
+pre-commit	执行 git commit 后、生成提交记录前	校验即将提交的代码	1. 执行 lint-staged 检查暂存区代码；2. 禁止提交调试代码（如 console.log）；3. 执行单元测试（仅测试修改的文件）
+commit-msg	提交信息输入后、提交完成前	校验提交信息格式	1. 强制提交信息符合规范（如 feat: 新增XX功能）；2. 禁止空提交、敏感关键词（如 临时修改）；3. 关联需求编号（如 feat(XXX-123): 新增XX）
+pre-push	执行 git push 后、推送到远程前	校验即将推送的代码	1. 执行全量单元测试 / 集成测试；2. 检查代码覆盖率是否达标；3. 禁止推送未合并的开发分支到主分支
+post-commit	提交完成后	提交后的收尾操作	1. 自动生成提交日志；2. 通知团队成员（如钉钉 / 飞书消息）；3. 更新项目文档
+pre-merge-commit	执行 git merge 后、合并提交前	校验合并的代码	1. 检查合并分支的代码规范；2. 避免合并冲突代码到主分支
 
-+ `ng-zorro-antd` based
-+ Responsive Layout
-+ I18n
-+ [@delon](https://github.com/ng-alain/delon)
-+ Lazy load Assets
-+ UI Router States
-+ Customize Theme
-+ Less preprocessor
-+ RTL
-+ Well organized & commented code
-+ Simple upgrade
-+ Support Docker deploy
+## "prepare": "husky install" 初始化 husky， 形成.husky 目录
+简单来说：git commit → Git 触发钩子 → husky 接管钩子 → 调用 lint-staged → 执行 lint 规则。
+- 关键要点
+    husky 是 Git 钩子的「管理器」，负责接管和执行钩子脚本；
+    lint-staged 是「暂存区文件的 lint 工具」，仅检查修改的文件，提升效率；
+    整个流程的核心是「Git 钩子的触发时机 + 工具的协作」，最终实现「提交前自动校验代码规范」的工程化目标
 
-## Architecture
+- 核心逻辑：lint-staged 的配置查找流程
+    graph TD
+    A[执行 npx lint-staged] --> B[读取命令行参数：是否指定配置文件（如 --config .lintstagedrc）]
+    B --> C{指定了配置文件？}
+    C -->|是| D[加载指定的配置文件]
+    C -->|否| E[扫描项目根目录，按优先级查找默认配置文件]
+    E --> E1[先找 .lintstagedrc/.lintstagedrc.json/.lintstagedrc.yml（优先级最高）]
+    E --> E2[找不到则找 lint-staged.config.js/lint-staged.config.cjs（其次）]
+    E --> E3[找不到则找 package.json 中的 lint-staged 字段（默认）]
+    E --> E4[都找不到则使用默认空配置（无操作）]
+    D & E1 & E2 & E3 & E4 --> F[解析配置规则，执行对应操作]
 
-![Architecture](https://raw.githubusercontent.com/ng-alain/delon/master/_screenshot/architecture.png)
-
-> [delon](https://github.com/ng-alain/delon) is a production-ready solution for admin business components packages, Built on the design principles developed by Ant Design.
-
-## App Shots
-
-![desktop](https://raw.githubusercontent.com/ng-alain/delon/master/_screenshot/desktop.png)
-![ipad](https://raw.githubusercontent.com/ng-alain/delon/master/_screenshot/ipad.png)
-![iphone](https://raw.githubusercontent.com/ng-alain/delon/master/_screenshot/iphone.png)
-
-## Contributing
-
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/ng-alain/ng-alain/pulls)
-
-We welcome all contributions. Please read our [CONTRIBUTING.md](https://github.com/ng-alain/ng-alain/blob/master/CONTRIBUTING.md) first. You can submit any ideas as [pull requests](https://github.com/ng-alain/ng-alain/pulls) or as [GitHub issues](https://github.com/ng-alain/ng-alain/issues).
-
-> If you're new to posting issues, we ask that you read [*How To Ask Questions The Smart Way*](http://www.catb.org/~esr/faqs/smart-questions.html) (**This guide does not provide actual support services for this project!**), [How to Ask a Question in Open Source Community](https://github.com/seajs/seajs/issues/545) and [How to Report Bugs Effectively](http://www.chiark.greenend.org.uk/~sgtatham/bugs.html) prior to posting. Well written bug reports help us help you!
-
-## Donation
-
-ng-alain is an MIT-licensed open source project. In order to achieve better and sustainable development of the project, we expect to gain more backers. You can support us in any of the following ways:
-
-- [patreon](https://www.patreon.com/cipchk)
-- [opencollective](https://opencollective.com/ng-alain)
-- [paypal](https://www.paypal.me/cipchk)
-- [支付宝或微信](https://ng-alain.com/assets/donate.png)
-
-Or purchasing our [business theme](https://e.ng-alain.com/).
-
-## Backers
-
-Thank you to all our backers! 🙏
-
-<a href="https://opencollective.com/ng-alain#backers" target="_blank"><img src="https://opencollective.com/ng-alain/backers.svg?width=890"></a>
-
-### License
-
-The MIT License (see the [LICENSE](https://github.com/ng-alain/ng-alain/blob/master/LICENSE) file for the full text)
+- lint-staged 内部通过 cosmiconfig 这个库实现配置查找
+-  如何确认 lint-staged 读取的是哪个配置 npx lint-staged --debug 查看配置查找过程
